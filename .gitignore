@@ -1,0 +1,27 @@
+# 
+*.mp3
+*.json
+finalproject-466106-c573b3aefa34.json/
+
+# certs
+certs/*.pem
+certs/*.key
+*.pem
+*.key
+*.pfx
+*.crt
+
+# env
+.env
+
+파이썬 가상환경
+venv/
+.venv/
+
+파이썬 캐시
+pycache/
+*.pyc
+
+테스트 결과물
+temp_audio.m4a
+temp_chunk_*.m4a
