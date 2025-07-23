@@ -4,6 +4,22 @@ import os
 from openai import OpenAI
 from typing import List, Dict
 
+# 테스트용 세팅
+
+from fastapi import FastAPI
+from dotenv import load_dotenv
+import uvicorn
+
+app = FastAPI()
+load_dotenv()
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
+    raise ValueError("FATAL ERROR: OPENAI_API_KEY not found in .env file.")
+
+
+
+
+
 def _encode_image_to_base64(image_path: str) -> str:
     """Encodes a single image file to a base64 string."""
     with open(image_path, "rb") as image_file:
@@ -15,15 +31,15 @@ def get_geolocation_from_images(image_paths: List[str]) -> List[Dict]:
     """
     client = OpenAI()
     if not image_paths:
-        print("No images provided for geolocation analysis.")
+        print("장소를 분석할 이미지를 찾지 못했습니다. 경로를 다시 확인해주세요.")
         return []
 
-    print(f"Analyzing {len(image_paths)} images with OpenAI o3 model...")
+    print(f"{len(image_paths)}개의 이미지를 OpenAI o3 모델로 분석 중입니다...")
     all_locations = []
 
     for image_path in image_paths:
         try:
-            print(f"Processing image: {os.path.basename(image_path)}")
+            print(f"분석 중인 이미지 : {os.path.basename(image_path)}")
             base64_image = _encode_image_to_base64(image_path)
 
             # The input structure for the o3 model
@@ -43,16 +59,14 @@ def get_geolocation_from_images(image_paths: List[str]) -> List[Dict]:
                             """
                         },
                         {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/jpeg;base64,{base64_image}"
-                            }
+                            "type": "input_image",
+                            "image_url": f"data:image/jpeg;base64,{base64_image}"
                         }
                     ]
                 }
             ]
 
-            print("Calling OpenAI o3 API...")
+            print("OpenAI o3 API를 불러오는 중...")
             # Using the specific client.responses.create method for the o3 model
             response = client.responses.create(
                 model="o3",
@@ -63,10 +77,10 @@ def get_geolocation_from_images(image_paths: List[str]) -> List[Dict]:
 
             # Assuming the response object has a .text attribute for the content
             response_text = response.text
-            print(f"Received response from OpenAI: {response_text}")
+            print(f"OpenAI로부터 성공적으로 결과를 가져왔습니다. : {response_text}")
 
             if not response_text:
-                print(f"  - Warning: Received an empty response from OpenAI for {os.path.basename(image_path)}.")
+                print(f"  - Warning: {os.path.basename(image_path)}에서 OpenAI가 아무런 결과를 보내지 못했습니다.")
                 continue
             
             location_data = json.loads(response_text)
@@ -79,14 +93,22 @@ def get_geolocation_from_images(image_paths: List[str]) -> List[Dict]:
             if location_data.get("name") and location_data["name"] is not None:
                 all_locations.append(location_data)
             else:
-                print(f"No valid location name found for image {os.path.basename(image_path)}")
+                print(f"{os.path.basename(image_path)}로부터 장소 정보를 추출하지 못했습니다.")
 
         except Exception as e:
-            print(f"An error occurred while processing {os.path.basename(image_path)} with OpenAI: {e}")
+            print(f"{os.path.basename(image_path)}를 OpenAI로 처리 중 에러가 발생했습니다. : {e}")
             continue
-        finally:
-            if os.path.exists(image_path):
-                os.remove(image_path)
+        # finally:
+        #     if os.path.exists(image_path):
+        #         os.remove(image_path)
     
-    print(f"Successfully extracted {len(all_locations)} locations.")
+    print(f"성공적으로 {len(all_locations)}개의 장소를 추출했습니다.")
     return all_locations
+
+
+captures_dir = 'captures'
+image_files = [os.path.join(captures_dir, f) for f in os.listdir(captures_dir) if f.endswith(('.jpg', '.jpeg', '.png', '.gif'))]
+get_geolocation_from_images(image_files)
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=9000, reload=True)
