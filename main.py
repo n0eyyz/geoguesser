@@ -59,19 +59,19 @@ def extract_ylocations(request: VideoRequest):
     1. Gemini analyzes the transcript to find and capture location screenshots.
     2. OpenAI GPT-4o analyzes the screenshots to extract geolocation data.
     """
-    print(f"\n--- Received request for URL: {request.youtube_url} ---")
+    print(f"\n--- 전송받은 URL: {request.youtube_url} ---")
 
     # Step 1: Use Gemini to find timestamps and capture screenshots
-    print("--- Step 1: Analyzing video with Gemini to find and capture locations ---")
+    print("--- Step 1: gemini가 영상 분석 중 ---")
     captured_image_paths = analyze_and_capture_locations(request.youtube_url)
 
     if not captured_image_paths:
-        print("Pipeline ended: No locations were captured from the video.")
+        print("Pipeline ended: 영상에서 어떠한 장소도 찾지 못했습니다.")
         raise HTTPException(
             status_code=404,
             detail="No locations could be identified and captured from the video."
         )
-    print(f"--- Step 1 Complete: Captured {len(captured_image_paths)} images ---")
+    print(f"--- Step 1 완료: {len(captured_image_paths)}개의 이미지를 분석 완료했습니다. ---")
 
     # Step 2: Use OpenAI to get geolocation from the captured images
     print("\n--- Step 2: Analyzing captured images with OpenAI GPT-4o ---")
