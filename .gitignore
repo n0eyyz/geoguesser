@@ -2,6 +2,7 @@
 *.mp3
 *.json
 finalproject-466106-c573b3aefa34.json/
+*.jpg
 
 # certs
 certs/*.pem
