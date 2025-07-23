@@ -1,10 +1,21 @@
-
 import os
 import subprocess
 import json
 import cv2
 import google.generativeai as genai
 from typing import List
+
+# 테스트용 세팅
+from fastapi import FastAPI
+from dotenv import load_dotenv
+import uvicorn
+
+app = FastAPI()
+load_dotenv()
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+if not GOOGLE_API_KEY:
+    raise ValueError("FATAL ERROR: GOOGLE_API_KEY not found in .env file.")
+genai.configure(api_key=GOOGLE_API_KEY)
 
 def _get_location_timestamps_with_gemini_vision(video_path: str) -> List[int]:
     """
@@ -35,9 +46,15 @@ def _get_location_timestamps_with_gemini_vision(video_path: str) -> List[int]:
         Your task is to watch this entire video and identify the precise moments (in seconds) when a new, significant location is visually presented.
 
         **What to look for:**
-        - A clear shot of a building's exterior (e.g., a restaurant, cafe, shop, landmark).
+        - Edited subtitles or on-screen text that explicitly names a location.
         - A clear shot of a sign with the location's name.
+        - A clear shot of a building's exterior (e.g., a restaurant, cafe, shop, landmark).
+        - A clear shot of a building's interior that clearly identifies the location (e.g., unique decor, branding).
         - A panoramic or establishing shot of a well-known public place (e.g., a famous square, park, or monument).
+
+        **Important Considerations:**
+        - Prioritize shots where the location is the primary focus, not people.
+        - If a shot contains both people and a clear location, ensure the location is still the dominant visual element.
 
         **Instructions:**
         1.  Analyze the entire video provided.
@@ -133,3 +150,14 @@ def analyze_and_capture_locations(video_url: str, output_dir: str = "captures") 
         if os.path.exists(downloaded_video_path):
             print(f"Cleaning up downloaded video file: {downloaded_video_path}")
             os.remove(downloaded_video_path)
+
+
+
+analyze_and_capture_locations('https://www.youtube.com/watch?v=XI1S0v_q2rI')
+
+# _get_location_timestamps_with_gemini_vision()
+
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="127.0.0.1", port=8000, reload=True)
